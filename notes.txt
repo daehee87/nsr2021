@@ -1,0 +1,175 @@
+# Notes
+
+## Part details
+
+- Intel Compute board
+  - Handles high level computations like computing the path, obstracle detection
+      and other high level mission control.
+  - Intel Atom x7-Z8750 processor 64bit
+  - 4 GB RAM
+  - Almost a general purpose computer
+  - Communicates with the Filght Controller using MAVLink protocol
+  - MAVLink is present as serial bus but also exposed as a TCP server socket at
+      port 5760
+  - OS Yocto Projet []()
+    - Linux 4.4.3
+    - Build instruction:
+        https://github.com/intel-aero/meta-intel-aero/wiki/96-(References)-Rebuild-Yocto
+    - Download link:
+        https://downloadmirror.intel.com/27833/eng/intel-aero-image-1.6.2.iso
+- Intel Flight controller
+  - Handles the real-time and dedicated part of the flight like balancing the
+      rotors, compass, etc.
+  - Communicates with the compute board using MAVLink
+  - OS: Dronecode PX4 Autopilot
+- Intel Realsense: 3D vision modulee
+
+## Links
+
+- [Wiki](https://github.com/intel-aero/meta-intel-aero/wiki)
+- Course by Intel Engineer
+    [https://github.com/intel-aero/Documents/tree/master/course](https://github.com/intel-aero/Documents/tree/master/course)
+- PX4 Intel aero doc
+    [https://docs.px4.io/en/flight_controller/intel_aero.html](https://docs.px4.io/en/flight_controller/intel_aero.html)
+
+## Setting up the network (on the Oct 2016 build)
+
+- Some info from the lecture [https://github.com/intel-aero/Documents/blob/master/course/pdf/C2%20-%20Autonomous%20Drone%20Engineer%20-%20Lab%20Setup%20-%20Network%20and%20ssh.pdf](https://github.com/intel-aero/Documents/blob/master/course/pdf/C2%20-%20Autonomous%20Drone%20Engineer%20-%20Lab%20Setup%20-%20Network%20and%20ssh.pdf)
+- From wiki [https://github.com/intel-aero/meta-intel-aero/wiki/08-Aero-Network-and-System-Administration](https://github.com/intel-aero/meta-intel-aero/wiki/08-Aero-Network-and-System-Administration)
+- hostapd start stop config `/etc/init.d/autostart-hostapd.sh`
+- The OS is outdated, the kernel flashed on the RTF drone was of Oct 2016.
+    Probable version from git history makes it 1.0 and missing of some of the
+    some of the commands put it at < 1.2. This means that any of the
+    informations on the wiki will not apply to this version. We need to flash a
+    newer version of the os.
+- For this version (1.0):
+  - hostapd - AP connection
+  - wpa_supplicant - for wifi connection
+  - to setup I used
+      [https://wiki.archlinux.org/index.php/WPA_supplicant#Advanced_usage](https://wiki.archlinux.org/index.php/WPA_supplicant#Advanced_usage)
+
+## Running on qemu:
+
+- there is a runqemu command which can be pointed to qemu conf file in the
+    built images directory
+- but it doesn't support the built intel-aero machine (bypassing by patching
+    the source code leads to illegal instructions while booting the OS)
+- to build for qemu, need to edit the build config file as per
+    [https://github.com/intel-aero/meta-intel-aero/issues/168](https://github.com/intel-aero/meta-intel-aero/issues/168)
+  - uncomment `MACHINE ?= "qemux86-64"`
+  - comment `PACKAGE_EXCLUDE="nfs-utils"`
+  - comment `RDEPENDS_packagegroup-core-full-cmdline-sys-services_remove="
+      nfs-utils"`
+- On macos with Xquarts display forwarding keyboard layout was not
+    recognised, solved by adding `qemuparams="-k en-us"` to the `runqemu`
+    command
+- setup network by following
+    https://docs.fedoraproject.org//en-US/Fedora/20/html/Networking_Guide/sec-Connecting_to_a_Network_Using_nmcli.html
+    and ip as 192.168.7.2 and gateway 192.168.7.1
+- After that you can ssh into it to have a better terminal :P
+
+## Analysis Notes
+
+- Interesting services
+  - aero-http-server.service: Just servers `/var/http`
+  - mavlink-router.service: Runs
+      [https://github.com/intel/mavlink-router](https://github.com/intel/mavlink-router)
+      as service
+- HSUART (high speed UART) is used to connect to the flight controller and is
+    export as /dev/ttyS1
+    [https://github.com/intel-aero/meta-intel-aero/wiki/Connecting-an-External-Flight-Controller#software-configuration](https://github.com/intel-aero/meta-intel-aero/wiki/Connecting-an-External-Flight-Controller#software-configuration)
+  -
+  [https://www.intel.com/content/dam/support/us/en/documents/boardsandkits/aero/apu-161110-pixhawk-flight-guide.pdf](https://www.intel.com/content/dam/support/us/en/documents/boardsandkits/aero/apu-161110-pixhawk-flight-guide.pdf)
+  - Some discussion on serial ports (not that important):
+      [https://communities.intel.com/thread/120929](https://communities.intel.com/thread/120929)
+- Package manager - dnf
+	- Upstream <https://download.01.org/aero/repo/1.6/> (from <https://github.com/intel-aero/meta-intel-aero/blob/master/recipes-support/intel-aero-repo/intel-aero-repo/intel-aero.repo>)
+
+
+## Simulation
+- <https://github.com/intel-aero/meta-intel-aero/wiki/91-(References)-Gazebo>
+- <https://software.intel.com/en-us/articles/intel-aero-compute-board-developer-guide-for-setting-up-a-simulation-environment>
+- No hardware simulation options
+
+## Intel Aero FC and PX4
+
+- Intel Aero FC
+	- ARM 32 bit processor (inferred from the built elf file)
+	- Toolchain <https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads>
+	- CMake target: Generic cortex-m4
+- <https://docs.px4.io/en/flight_controller/intel_aero.html>
+- Development
+	- Follow the dev guide <http://dev.px4.io/>
+	- For ubuntu 16 on VMWare, update the opengl version by following <https://askubuntu.com/a/672301> to run the simulators.
+- <http://dev.px4.io/en/concept/architecture.html>
+- Console
+	- <https://dev.px4.io/en/debug/system_console.html>
+	- Intel FC Doesn't expose any physical port for nsh console <https://communities.intel.com/thread/126999>
+	- OS is based on <http://nuttx.org/> RTOS
+- Building
+  - Clone the firmware from <https://github.com/PX4/Firmware>. All the following analysis was done at the commit `e2973028ab`.
+  - Install the toolchain as outlined at
+      <http://dev.px4.io/en/setup/dev_env_linux.html>
+  - run `make aerofc-v1_default`
+  - copy the file .px4 file in the build directory onto the drone though scp
+  - SSH onto the drone and run `aerofc-update.sh aerofc-v1_default.px4`
+  - cmake config file is located at `cmake/configs/nuttx_aerofc-v1_default.cmake`
+  - Uses ninja build system, can be made to use the cmake system by setting
+      `NO_NINJA_BUILD`
+  - If flashed with a broken build, then follow the instructions at
+      <https://github.com/intel-aero/meta-intel-aero/issues/133#issuecomment-297810039>
+      to flash with a new firmware.
+      - Flash the recovery FPGA configuration `jam` in `/etc/fpga`. Reboot.
+      - Update the AeroFC with a new px4 file. Flash back the normal FPGA `jam`
+          file in `/etc/fpga`.
+- Simulation
+  - Found <https://beckus.github.io/qemu_stm32/>, need to investigate further.
+
+## Making patcherex work
+- No Linux version of IDA with me, I removed the check for now
+- The latest `cle` doesn't support the updated `idalink`. Uninstall `cle` and
+    install `cle==0.10`.
+- Installed compilerex (although it's commented in setup.py, it was not
+    available in pip)
+- Custom patches for adding patchkit broke the existing patching
+  functionalities. Note: probably can be fixed if we somehow make the baseclass
+  of patch compatible with python `str`.
+
+## Analysis for heap randomization
+- `malloc` is mostly not used directly (less than 10 files). Mostly they are cpp
+    files and `new` operator is used. The implementation of `new` uses `malloc`.
+- The developed scripts are for Linux system. The Nuttx uses a flat memory
+    structure with no `syscalls`. Also, the final firmware image is a statically
+    linked ELF file which means operating on the object files on linked functions
+    is of not much use.
+- Seems way easier to insert our modification in the source code for `malloc`
+    than use binary instrumentation.
+
+## Analysis of stack randomization
+- Simply adding random values in the function prologue doesn't seem feasible
+    since in the function epilogue some complex operations are being done for
+    registers' value preservation. Probably if we can detect the pairing SP
+    arithmetics, or at lest the pairing SP arithmetics for local variables
+    allocation, we might be successful.
+- Patchkit code has a sample for x86
+    <https://github.com/lunixbochs/patchkit/blob/master/samples/x86/harden/03_spadjust.py>
+- Some functions are straight arrows and can be done on them.
+
+## Patchkit
+- The IDA script to generate the function boundaries is not working. Fixed it for PIE (or object files)
+- The ELF parser doesn't support object files. Turns out that the one used by
+    pwntools (pyelftools) doesn't support object files either.
+- Stubbed it's ELF handling routine with Radare2 using r2pipe.
+- Fetched detected stack size and function graph analysis from Radare2.
+- A stack randomization code that detects the stack operation in the entry
+    and exit block to increment the stack size
+
+## Building the modified PX4 firmware
+- Read the _#Building_ section of _#Intel Aero FC and PX4_ above for details on obtaining the firmware, setting up the toolchain, building an unpatched firmware, flashing it and how to recover from broken firmware.
+- Set the `PATH` `env` variable such that [patchkit/arm-none-eabi-g++](patchkit/arm-none-eabi-g++) is in the `PATH`.
+- Edit the above file to fix the path of the original `arm-none-eabi-g++` compiler, `stack_patch` script and `file_list` filter file.
+- Edit the `file_list` to select only those obj files that needs to be patched. Each line denote the obj file that is passed as output to the compiler.
+- Run `make clean && make aerofc-v1_default` in the cloned firmware directory.
+- Copy the file .px4 file in the build directory (`build/nuttx_aerofc-v1_default/`) onto the drone though scp.
+- SSH onto the drone and run `aerofc-update.sh aerofc-v1_default.px4` to update the PX4 firmware.
+- Run `./Tools/mavlink_shell.py tcp:192.168.7.2:5760` to get the shell on the FC and check that it booted correctly. Ref: <https://dev.px4.io/en/debug/system_console.html>

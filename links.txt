@@ -1,0 +1,6 @@
+https://www.youtube.com/watch?v=mKt4ZTaE2bk
+https://ardupilot.org/dev/docs/sitl-with-airsim.html
+https://github.com/PX4/PX4-Autopilot
+https://www.youtube.com/watch?v=37CP43OogQI
+https://docs.px4.io/master/en/simulation/gazebo.html  -> gazebo. this seems right.
+
