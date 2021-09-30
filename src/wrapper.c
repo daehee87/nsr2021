@@ -20,15 +20,15 @@ void fuzz_entry(unsigned int addr, char* seed){
 	);
 }
 
-// todo, dynamically get elf base.
-#define BASE ((void*)0x5555e000)
+// PUT target's ELF base address here.
+#define BASE ((void*)0x10000)
 
 // use file interface with AFL++ (@@)
 int main(int argc, char* argv[]){
 	FILE* fp;
 	size_t fsize;
 	struct stat st;
-	
+
 	// load target binary
 	size_t len_file;
 	struct stat st;
@@ -55,8 +55,12 @@ int main(int argc, char* argv[]){
 
 	// todo.
 	// get target function address (including lsb)
-	// invoke fuzz_entry(fptr, seed);
+	void* fptr = BASE;
+	unsigned int offset = 0x500;	// put function's file offset here!
+	fptr += offset;
 
+	// start fuzzing.
+	fuzz_entry(fptr, seed);
 	return 0;
 }
 

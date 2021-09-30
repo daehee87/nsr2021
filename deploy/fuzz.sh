@@ -1,1 +1,1 @@
-./afl-fuzz -Q -i /input -o /output -- ./test-instr-32
+./afl-fuzz -Q -i /input -o /output -- /target.bin @@
