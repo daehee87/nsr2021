@@ -1,0 +1,2 @@
+do echo "core-%e" > /proc/sys/kernel/core_pattern outside docker as root.
+install arm cross compiler inside docker for testing
