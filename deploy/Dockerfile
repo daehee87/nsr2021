@@ -21,8 +21,7 @@ ENV QEMU_LD_PREFIX=/usr/arm-linux-gnueabihf
 WORKDIR /
 RUN mkdir input
 RUN mkdir output
-RUN echo dummy > /input/0
-ADD target.bin /
+ADD src /src
 ADD fuzz.sh /AFLplusplus/
 #RUN ln -s `which r2` ./r2
 RUN chmod +x /AFLplusplus/fuzz.sh
