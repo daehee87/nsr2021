@@ -8,7 +8,7 @@ import sys, os, random
 def is_virtual(ins):
     branches=['bl', 'blx', 'bx'] #need to search virtual call
     if ins.mnemonic in branches:
-        for i in ins.operanSds:
+        for i in ins.operands:
             reg = ins.reg_name(i.value.reg)
             if reg != 'lr' and (i.type != ARM_OP_IMM):
                 return True
